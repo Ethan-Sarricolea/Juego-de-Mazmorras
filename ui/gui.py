@@ -101,6 +101,7 @@ class Game():
         self.msg.config(text="",font=("TkDefaultFont",10))
         self.msg.pack(pady=60)
         self.descripcion.pack(pady=20)
+        # Te da el mensaje de la sala en la que estas
         if (room==5):
             self.msg.config(text=self.mensajes_por_sala[room-1])
             self.descripcion.config(text=self.descripciones[room-1])
@@ -124,11 +125,17 @@ class Game():
         self.window.after(5000,self.show_doors)
 
     def show_doors(self,cant=4):
+        # Se le pasa la cantidad de puertas (nodos) a los que esta conectada la sala actual
         self.clear()
         self.volver.pack(side="bottom",ipadx=20,pady=10)
         for opcion in range(0,cant):
             self.puertas[opcion].pack(side="left",pady=10,padx=30,ipadx=10,ipady=30)
 
     def run(self):
+        # Inicia la interfaz
         self.main_menu()
         self.window.mainloop()
+
+"""
+En que parte del codigo se genera la mazmorra?
+"""
