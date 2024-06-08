@@ -33,9 +33,8 @@ class Mazmorras:
         self.aleatorio = random.Random()
         self.mapa = nx.Graph()
         self.salas = ["E","V","C","T","S"]
-        self.vacias = []
-        self.cofres = []
-        self.trampas = []
+        self.nodos = []
+        self.dist = []
     
     def set_map_size(self):
         #Crear y añadir los nodos
@@ -47,11 +46,7 @@ class Mazmorras:
         elif self.nivel==3:
             self.create_rooms(9,20)
         # Mostrar grafo
-        pos = nx.spring_layout(self.mapa)  # Posiciones de los nodos
-        nx.draw(self.mapa,pos,with_labels=True, node_color='lightblue', node_size=500)
-        labels = nx.get_node_attributes(self.mapa, 'id')
-        nx.draw_networkx_labels(self.mapa, pos, labels=labels)
-        plt.show()
+        # print(self.nodos)
             
     def create_rooms(self,maxSize,limit):
         #creacion de la entrada
@@ -60,11 +55,13 @@ class Mazmorras:
             if room=="E" or room=="S":
                 # Agregar una entrada y una salida
                 self.mapa.add_node(room)
+                self.nodos.append(room)
                 salas_cant+=1
             elif (room=="V"):
                 # Agregar el numero maximo de salas vacias
                 for i in range(1,maxSize+1):
                     self.mapa.add_node(f"{room}{i}")
+                    self.nodos.append(f"{room}{i}")
                     salas_cant+=1
             elif (room=="C"):
                 #Agregar un numero aleatorio de cofres segun el maximo
@@ -72,24 +69,92 @@ class Mazmorras:
                 maxSize -=cant
                 for i in range(1,cant+1):
                     self.mapa.add_node(f"{room}{i}")
+                    self.nodos.append(f"{room}{i}")
                     salas_cant+=1
             elif (room=="T"):
                 # Agregar el numero restante de trampas segun el maximo
                 for i in range(1,maxSize+1):
                     self.mapa.add_node(f"{room}{i}")
+                    self.nodos.append(f"{room}{i}")
                     salas_cant+=1
+        self.conect_rooms(limit=limit)
 
-    def get_map_size(self) -> int:
-        print("lalalala")
+    def show_nodes(self) -> int:
+        pos = nx.spring_layout(self.mapa)  # Posiciones de los nodos
+        nx.draw(self.mapa,pos,with_labels=True, node_color='lightblue', node_size=500)
+        labels = nx.get_node_attributes(self.mapa, 'id')
+        nx.draw_networkx_labels(self.mapa, pos, labels=labels)
+        plt.show()
 
-    def conect_rooms(self) -> None:
-        print("Conexion de los nodos")
-        # Un nodo se puede conectar hasta a 4 salas y debe haber al menor un camino a la salida
-        """
-            Se puede agregar un proceso para crear x caminos principales segun el nivel (1,2,3)
-            Estos se generan primero y despues se conectan los demas nodos a las salas de estso de manera aleatorioa
-            Despues de generarse los caminos principales ya no se podra conectar a la entrada o salida
-        """
+    def clear(self):
+        nodes_to_remove = [node for node in self.mapa.nodes if self.mapa.degree(node) == 0]
+        for node in nodes_to_remove:
+            self.mapa.remove_node(node)
+            # Eliminar las conexiones de un nodo si tiene mas de 4
+
+    def conect_rooms(self,limit) -> None:
+        # print(self.nodos)
+        # print(self.dist)
+        finInIndex = 4
+        for room in self.salas:
+            if (room=="E"):
+                add = [room]
+                for n in range(finInIndex):
+                    number = self.aleatorio.randrange(1,limit-1)
+                    add.append(self.nodos[number])
+                self.dist.append(add)
+                last = add[-1]
+                print(add)
+            elif (room=="S"):
+                # Si es una sala vacia se agrega un numero aleatorio de conexiones entre 1 y 3
+                add = [room]
+                for n in range(finInIndex-1):
+                    number = self.aleatorio.randrange(1,limit-1)
+                    add.append(self.nodos[number])
+                self.dist.append(add)
+                print(add)    
+            elif (room=="V"):
+                for sala in self.nodos:
+                    # print(self.nodos)
+                    # Si es una sala vacia, de cofre o trampa:
+                    if (sala[0]=="V" or sala[0]=="C" or sala[0]=="T"):
+                        add = [sala]    # Se crea la estructura de distribucion comenzando por el nodo inicial
+                        cant = 3 if sala[0]=="T" else 4     # Si la sala es una trampa la cantidad de conexiones
+                        for i in range(1,cant):
+                            number = self.aleatorio.randrange(1,limit-1)    # Se determina un numero aleatorio de la sala por conectar
+                            status=0
+                            for distri in self.dist:
+                                for date in distri:     # Revisar si el la sala ya se uso mas de 4 o mas veces
+                                    if date == self.nodos[number]:
+                                        print(date)
+                                        status+=1
+                                        continue
+                                    else:
+                                        continue
+                            # print(status)
+                            if(status>=4):
+                                print("supera los 4")
+                                continue    # Si el nodo por agregar ya esta enlistado no se agregara
+                            else:
+                                if number==self.nodos.index(sala):
+                                    break    # Si se intenta agregar el mismo nodo se cancela
+                                else:
+                                    # Se crea la distribucion del nodo
+                                    if self.nodos[number] in add:
+                                        i-=1
+                                        continue
+                                    add.append(self.nodos[number])
+                        # Se agrega la distribucion a la lista
+                        print(add)
+                        self.dist.append(add)
+        # Se agregan los nodos en base a las distribuciones
+        for nodo in self.dist:
+            for i in range(2,len(nodo)):
+                self.mapa.add_edge(nodo[0],nodo[i])
+        self.clear()
+
 
 algo = Mazmorras(1)
 algo.set_map_size()
+print(max(dict(algo.mapa.degree()).values()))
+algo.show_nodes()
