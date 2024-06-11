@@ -58,7 +58,7 @@ class Game():
         self.descripcion.config(text=f"Puntaje = {self.puntaje}")
         print("___________")
         print(f"Puntaje = {self.puntaje}")
-        print(f"Recorrido: {self.recorrido}")
+        print(f"Recorrido: {self.recorrido-1}")
         print(f"Camino mas corto:",len(self.generador.get_camino())-1,self.generador.get_camino())
         self.window.update()
         time.sleep(3)
