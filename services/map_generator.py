@@ -122,7 +122,7 @@ class Mazmorras:
             print(f"Error de generacion {e}")
             print("Realizando otro intento...")
             if self.errorCount>5:   # por mas de 5 intentos se disminuye el nivel
-                self.nivel = ((level/3)-1)
+                self.nivel = ((level/3)-1 if (level/3)>1 else (level/3))
                 self.set_map_size()
             else:
                 self.conect_rooms(level)
@@ -133,6 +133,10 @@ class Mazmorras:
 
     def get_node_degree(self,node="E"):
         return self.mapa.degree(node)
+    
+    def leave(self):
+        self.mapa.clear()
+        plt.close()
 
 """    def conect_rooms(self,limit) ->None:
         print("Coneccion")

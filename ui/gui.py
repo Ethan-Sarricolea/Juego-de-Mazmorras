@@ -32,7 +32,7 @@ class Game():
         self.mensajes_por_sala = ["La entrada esta bloqueada",
                                   "Al parecer aqui no hay nada...",
                                   "Haz encontrado un tesoro +50 puntos",
-                                  "Caiste en una trampa y te haz herido -5 puntos",
+                                  "Caiste en una trampa y te haz herido -10 puntos",
                                   "Llegaste al final de la mazmorra"]
         self.descripciones = ["Debes encontrar la salida",
                               "Busca otro camino",
@@ -60,9 +60,16 @@ class Game():
         print(f"Puntaje = {self.puntaje}")
         print(f"Recorrido: {self.recorrido-1}")
         print(f"Camino mas corto:",len(self.generador.get_camino())-1,self.generador.get_camino())
+        print("___________")
+        self.recorrido = 0
         self.window.update()
+        self.generador.leave()
         time.sleep(3)
         self.window.after(2000,self.main_menu)
+
+    def winBreak(self):
+        self.window.destroy()
+        self.generador.leave()
 
     def detect(self,event):
         self.go.config(state="normal")
@@ -76,7 +83,7 @@ class Game():
         tk.Label(self.window,text="Juego de Mazmorras",font=("TkDefaultFont",15)).pack(pady=20)
         self.go.pack(pady=25)
         self.combo.pack(pady=15)
-        tk.Button(self.window,text="Salir",bg="red",width=20,command=self.window.destroy).pack(pady=5)
+        tk.Button(self.window,text="Salir",bg="red",width=20,command=self.winBreak).pack(pady=5)
         self.combo.bind("<<ComboboxSelected>>",self.detect)
 
     def points(self):
@@ -97,6 +104,7 @@ class Game():
         self.msg.pack(pady=60)
         self.msg.config(text="Generando mazmorra")
         self.window.update()
+        self.hilo = Thread(target=self.points)
         self.hilo.start()
         self.generador = map_generator.Mazmorras(int(self.combo.get()))
         self.generador.set_map_size()
@@ -116,7 +124,7 @@ class Game():
     def show_room(self,sala):
         self.room = sala
         self.charge = False
-        habitacion = (self.salas.index(self.room[0])+1 if self.room in self.salas else 0)
+        habitacion = (self.salas.index(self.room[0])+1 if self.room[0] in self.salas else 0)
         self.clear()
         time.sleep(1)
         self.msg.config(text="",font=("TkDefaultFont",10),fg="white")
@@ -161,18 +169,20 @@ class Game():
             self.puntaje-=10
         if self.room=="S"   :
             self.volver.pack(side="bottom",ipadx=20,pady=10)
-        for opcion in range(0,cant):
-            self.puertas[opcion].pack(side="left",pady=10,padx=30,ipadx=10,ipady=30)
-            self.puertas[opcion].config(command= lambda sala=conexiones[opcion] : self.show_room(sala))
-        # print(conexiones)
-        print(f"Puntaje = {self.puntaje}")
-        print(f"Sala actual: {self.room}")
-        self.generador.show_nodes()
+        if cant<=4:
+            for opcion in range(0,cant):
+                self.puertas[opcion].pack(side="left",pady=10,padx=30,ipadx=10,ipady=30)
+                self.puertas[opcion].config(command= lambda sala=conexiones[opcion] : self.show_room(sala))
+            # print(conexiones)
+            print(f"Puntaje = {self.puntaje}")
+            print(f"Sala actual: {self.room}")
+            self.generador.show_nodes()
+        else:
+            print(f"Error de generacion: El mapa ha excedido el limite de conexiones por sala {cant}/4")
+            self.main_menu()
+            self.generador.show_nodes()
 
     def run(self):
         # Inicia la interfaz
         self.main_menu()
         self.window.mainloop()
-"""
-En que parte del codigo se genera la mazmorra?
-"""
